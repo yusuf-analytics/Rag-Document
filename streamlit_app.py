@@ -20,18 +20,25 @@ import google.generativeai as genai
 from pathlib import Path
 from datetime import datetime
 
-# Load environment variables
+# Load environment variables (local dev)
 load_dotenv()
 
+def _get_secret(key: str, default: str = "") -> str:
+    """Read from st.secrets (Streamlit Cloud) or os.getenv (.env) — works in both environments."""
+    try:
+        return st.secrets[key]
+    except (KeyError, FileNotFoundError):
+        return os.getenv(key, default)
+
 # Configure API keys
-api_key = os.getenv("GOOGLE_API_KEY")
+api_key = _get_secret("GOOGLE_API_KEY")
 if api_key:
     genai.configure(api_key=api_key)
-tavily_api_key = os.getenv("TAVILY_API_KEY")
-groq_api_key = os.getenv("GROQ_API_KEY")
-langchain_api_key = os.getenv("LANGCHAIN_API_KEY", "")
+tavily_api_key = _get_secret("TAVILY_API_KEY")
+groq_api_key = _get_secret("GROQ_API_KEY")
+langchain_api_key = _get_secret("LANGCHAIN_API_KEY")
 
-# FIX 4: Only enable LangSmith tracing if a real key is provided
+# Only enable LangSmith tracing if a real key is provided
 if langchain_api_key and langchain_api_key != "your_langchain_api_key_here":
     os.environ["LANGCHAIN_TRACING_V2"] = "true"
     os.environ["LANGCHAIN_API_KEY"] = langchain_api_key
@@ -62,8 +69,6 @@ class GraphState(TypedDict, total=False):
 # 🤖 LLM Configuration
 # ----------------------------
 if groq_api_key:
-    # Use llama-3.1-8b-instant for both generation and grading
-    # (llama-3.3-70b-versatile hits the free-tier 100k TPD limit quickly)
     llm_generator = ChatGroq(
         model="llama-3.1-8b-instant",
         temperature=0.0,
@@ -73,12 +78,12 @@ if groq_api_key:
     llm_grader = ChatGroq(
         model="llama-3.1-8b-instant",
         temperature=0.0,
-        max_tokens=10,                       # Graders only need 1-2 words
+        max_tokens=10,
         groq_api_key=groq_api_key
     )
-    llm = llm_generator  # backward-compat alias
+    llm = llm_generator
 else:
-    st.error("GROQ_API_KEY not found in .env file!")
+    st.error("⚠️ GROQ_API_KEY tidak ditemukan. Tambahkan di Streamlit Cloud → Settings → Secrets, atau di file .env untuk lokal.")
     st.stop()
 
 
