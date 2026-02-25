@@ -1,0 +1,26 @@
+# Environment & secrets — JANGAN PERNAH DI-PUSH!
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+venv/
+env/
+.venv/
+
+# Temp uploads (user PDFs)
+temp_uploads/
+
+# FAISS index cache
+faiss_index/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
